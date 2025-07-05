@@ -1,3 +1,27 @@
+// Quiz Data
+const quiz = [
+  {
+    question: "Q. Which of the following is not a CSS box model property?",
+    choices: ["margin", "padding", "border-radius", "border-collapse"],
+    answer: "border-collapse"
+  },
+  {
+    question: "Q. Which is not a valid way to declare a function in JavaScript?",
+    choices: ["function myFunction() {}", "let myFunction = function() {};", "myFunction: function() {}", "const myFunction = () => {};"],
+    answer: "myFunction: function() {}"
+  },
+  {
+    question: "Q. Which is not a JavaScript data type?",
+    choices: ["string", "boolean", "object", "float"],
+    answer: "float"
+  },
+  {
+    question: "Q. What is the purpose of the 'this' keyword in JavaScript?",
+    choices: ["It refers to the current function.", "It refers to the current object.", "It refers to the parent object.", "It is used for comments."],
+    answer: "It refers to the current object."
+  }
+];
+
 const container = document.querySelector('.container');
 const questionBox = document.querySelector('.question');
 const choicesBox = document.querySelector('.choices');
@@ -6,30 +30,13 @@ const scoreCard = document.querySelector('.scoreCard');
 const alert = document.querySelector('.alert');
 const startBtn = document.querySelector('.startBtn');
 const timer = document.querySelector('.timer');
+const modeSwitch = document.getElementById('modeSwitch');
 
-// Quiz Data
-const quiz = [
-    {
-        question: "Q. Which of the following is not a CSS box model property?",
-        choices: ["margin", "padding", "border-radius", "border-collapse"],
-        answer: "border-collapse"
-    },
-    {
-        question: "Q. Which is not a valid way to declare a function in JavaScript?",
-        choices: ["function myFunction() {}", "let myFunction = function() {};", "myFunction: function() {}", "const myFunction = () => {};"],
-        answer: "myFunction: function() {}"
-    },
-    {
-        question: "Q. Which is not a JavaScript data type?",
-        choices: ["string", "boolean", "object", "float"],
-        answer: "float"
-    },
-    {
-        question: "Q. What is the purpose of the 'this' keyword in JavaScript?",
-        choices: ["It refers to the current function.", "It refers to the current object.", "It refers to the parent object.", "It is used for comments."],
-        answer: "It refers to the current object."
-    }
-];
+// Sounds
+const correctSound = new Audio('sounds/correct.mp3');
+const wrongSound = new Audio('sounds/wrong.mp3');
+const tickSound = new Audio('sounds/tick.mp3');
+const finishSound = new Audio('sounds/finish.mp3');
 
 let currentQuestionIndex = 0;
 let score = 0;
@@ -37,131 +44,147 @@ let quizOver = false;
 let timeLeft = 15;
 let timerID = null;
 
-// Display question and choices
-const showQuestions = () => {
-    const questionDetails = quiz[currentQuestionIndex];
-    questionBox.textContent = questionDetails.question;
-    choicesBox.textContent = "";
+function showQuestions() {
+  const questionDetails = quiz[currentQuestionIndex];
+  questionBox.textContent = questionDetails.question;
+  choicesBox.innerHTML = "";
 
-    questionDetails.choices.forEach(choice => {
-        const choiceDiv = document.createElement('div');
-        choiceDiv.textContent = choice;
-        choiceDiv.classList.add('choice');
-        choicesBox.appendChild(choiceDiv);
+  questionDetails.choices.forEach(choice => {
+    const div = document.createElement('div');
+    div.classList.add('choice');
+    div.textContent = choice;
+    choicesBox.appendChild(div);
 
-        // Mutually exclusive selection
-        choiceDiv.addEventListener('click', () => {
-            document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
-            choiceDiv.classList.add('selected');
-        });
+    div.addEventListener('click', () => {
+      document.querySelectorAll('.choice').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
     });
+  });
 
-    startTimer();
+  startTimer();
 }
 
-// Check the selected answer
-const checkAnswer = () => {
-    const selectedChoice = document.querySelector('.choice.selected');
-    if (!selectedChoice) {
-        displayAlert("Select your answer");
-        return;
+function checkAnswer() {
+  const selected = document.querySelector('.choice.selected');
+  if (!selected) {
+    displayAlert("Select your answer");
+    return;
+  }
+
+  const correct = quiz[currentQuestionIndex].answer;
+  if (selected.textContent === correct) {
+    selected.style.backgroundColor = "#00c853";
+    selected.style.color = "#fff";
+    score++;
+    correctSound.play();
+    displayAlert("✅ Correct Answer!");
+  } else {
+    selected.style.backgroundColor = "#d32f2f";
+    selected.style.color = "#fff";
+    wrongSound.play();
+    displayAlert(`❌ Wrong! Correct: ${correct}`);
+  }
+
+  timeLeft = 15;
+  currentQuestionIndex++;
+
+  if (currentQuestionIndex < quiz.length) {
+    setTimeout(showQuestions, 1500);
+  } else {
+    stopTimer();
+    setTimeout(showScore, 1500);
+  }
+}
+
+function showScore() {
+  questionBox.textContent = "";
+  choicesBox.innerHTML = "";
+  scoreCard.textContent = `You Scored ${score} out of ${quiz.length}!`;
+  displayAlert("🎉 Quiz Completed!");
+  confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+  finishSound.play();
+  nextBtn.textContent = "Play Again";
+  quizOver = true;
+  timer.style.display = "none";
+}
+
+function displayAlert(msg) {
+  alert.textContent = msg;
+  alert.style.display = "block";
+  setTimeout(() => {
+    alert.style.display = "none";
+  }, 2000);
+}
+
+function startTimer() {
+  clearInterval(timerID);
+  timeLeft = 15;
+  timer.querySelector("span").textContent = timeLeft;
+  tickSound.currentTime = 0;
+  tickSound.loop = true;
+  tickSound.play();
+
+  timerID = setInterval(() => {
+    timeLeft--;
+    timer.querySelector("span").textContent = timeLeft;
+
+    if (timeLeft === 0) {
+      clearInterval(timerID);
+      tickSound.pause();
+      tickSound.currentTime = 0;
+      const again = confirm("⏰ Time's Up! Try again?");
+      if (again) {
+        startQuiz();
+      } else {
+        container.style.display = "none";
+        startBtn.style.display = "block";
+      }
     }
-
-    const answer = quiz[currentQuestionIndex].answer;
-    if (selectedChoice.textContent === answer) {
-        score++;
-        displayAlert("Correct Answer!");
-    } else {
-        displayAlert(`Wrong! Correct Answer: ${answer}`);
-    }
-
-    timeLeft = 15;
-    currentQuestionIndex++;
-
-    if (currentQuestionIndex < quiz.length) {
-        showQuestions();
-    } else {
-        stopTimer();
-        showScore();
-    }
+  }, 1000);
 }
 
-// Show score at the end
-const showScore = () => {
-    questionBox.textContent = "";
-    choicesBox.textContent = "";
-    scoreCard.textContent = `You Scored ${score} out of ${quiz.length}!`;
-    displayAlert("🎉 Quiz Completed!");
-    nextBtn.textContent = "Play Again";
-    quizOver = true;
-    timer.style.display = "none";
+function stopTimer() {
+  clearInterval(timerID);
+  tickSound.pause();
+  tickSound.currentTime = 0;
 }
 
-// Alert message display
-const displayAlert = (msg) => {
-    alert.style.display = "block";
-    alert.textContent = msg;
-    setTimeout(() => {
-        alert.style.display = "none";
-    }, 2000);
+function shuffleQuestions() {
+  for (let i = quiz.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [quiz[i], quiz[j]] = [quiz[j], quiz[i]];
+  }
 }
 
-// Timer logic
-const startTimer = () => {
-    clearInterval(timerID);
-    timer.textContent = timeLeft;
-
-    timerID = setInterval(() => {
-        timeLeft--;
-        timer.textContent = timeLeft;
-
-        if (timeLeft === 0) {
-            clearInterval(timerID);
-            const playAgain = confirm("⏰ Time's Up! Do you want to try again?");
-            if (playAgain) {
-                startQuiz();
-            } else {
-                container.style.display = "none";
-                startBtn.style.display = "block";
-            }
-        }
-    }, 1000);
+function startQuiz() {
+  quizOver = false;
+  currentQuestionIndex = 0;
+  score = 0;
+  scoreCard.textContent = "";
+  timeLeft = 15;
+  nextBtn.textContent = "Next";
+  timer.style.display = "flex";
+  container.style.display = "flex";
+  shuffleQuestions();
+  showQuestions();
 }
 
-const stopTimer = () => clearInterval(timerID);
-
-// Shuffle the quiz array
-const shuffleQuestions = () => {
-    for (let i = quiz.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [quiz[i], quiz[j]] = [quiz[j], quiz[i]];
-    }
-}
-
-// Start or restart the quiz
-const startQuiz = () => {
-    quizOver = false;
-    currentQuestionIndex = 0;
-    score = 0;
-    timeLeft = 15;
-    nextBtn.textContent = "Next";
-    timer.style.display = "flex";
-    scoreCard.textContent = "";
-    shuffleQuestions();
-    showQuestions();
-}
-
-// Event Listeners
 startBtn.addEventListener('click', () => {
-    startBtn.style.display = "none";
-    container.style.display = "block";
-    startQuiz();
+  startBtn.style.display = "none";
+  container.style.display = "flex";
+  startQuiz();
 });
 
 nextBtn.addEventListener('click', () => {
-    if (quizOver) {
-        startQuiz();
-    } else {
-        checkAnswer();
-    }
+  if (quizOver) {
+    startQuiz();
+  } else {
+    checkAnswer();
+  }
+});
+
+// Toggle Mode
+modeSwitch.addEventListener('change', () => {
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
 });

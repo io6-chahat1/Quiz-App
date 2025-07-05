@@ -2,35 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Game</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <!-- Alert -->
-  <div class="alert">This is an alert</div>
+<body class="dark">
+  <!-- 🌗 Toggle Switch -->
+  <div class="toggle-container">
+    <label for="modeSwitch">Light Mode</label>
+    <input type="checkbox" id="modeSwitch" />
+  </div>
 
-  <!-- Timer -->
-  <div class="timer">⏳ <span id="time">15</span></div>
+  <!-- ⏰ Timer -->
+  <div class="timer">
+    <span>15</span>
+  </div>
 
-  <!-- Start Screen -->
+  <!-- ⚠️ Alert -->
+  <div class="alert"></div>
+
+  <!-- 🧠 Quiz Start Screen -->
   <div class="start-screen">
-    <h1>🎯 Welcome to the Quiz Game</h1>
+    <h1>🧠 Welcome to the Quiz Game!</h1>
     <button class="btn startBtn">Start Quiz</button>
   </div>
 
-  <!-- Quiz Container -->
+  <!-- 📋 Quiz Container -->
   <div class="container">
-    <h1>Let's Play a Quiz</h1>
-    <div class="scoreCard">Score: 0</div>
-    <div class="question">Question appears here</div>
-    <div class="choices">
-      <!-- Options appear here -->
-    </div>
+    <h1>📄 Quiz Game</h1>
+    <div class="question">Question text here</div>
+    <div class="choices"></div>
     <button class="btn nextBtn">Next</button>
+    <div class="scoreCard"></div>
   </div>
 
+  <!-- 🎯 Script -->
   <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
 </html>
